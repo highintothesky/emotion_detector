@@ -18,6 +18,7 @@ update your pip:
 install dependencies:
 
 `pip3 install -r requirements.txt`
+`pip3 install opencv-python`
 
 now, If you have a GPU and CUDA 10.2 installed:
 
