@@ -1,7 +1,7 @@
 # emotion_detector
 Face emotion detection using tf.keras
 
-# Peparation
+## Preparation
 
 start a virtualenv:
 
@@ -11,9 +11,14 @@ activate it:
 
 `source .venv/bin/activate`
 
+update your pip:
+
+`pip3 install --upgrade pip`
+
 install dependencies:
 
 `pip3 install -r requirements.txt`
+`pip3 install opencv-python`
 
 now, If you have a GPU and CUDA 10.2 installed:
 
@@ -21,9 +26,9 @@ now, If you have a GPU and CUDA 10.2 installed:
 
 else:
 
-`pip3 install tensorflow==2.0.1`
+`pip3 install tensorflow-cpu==2.1.0`
 
-# Testing/Data Recording
+## Testing/Data Recording
 
 start the webcam demo:
 
