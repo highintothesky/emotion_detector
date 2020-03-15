@@ -37,3 +37,15 @@ start the webcam demo:
 in the webcam GUI, press 't' to toggle between data recording and testing,
 0-5 to select the target emotion, 'r' to start recording, and 'q' to stop
 and write the data to your data folder.
+
+after recording some data, you can manually remove images from the data/images folder. update all.csv by running
+
+`python3 remove_old_entries.py`
+
+then split into training/test set:
+
+`python3 train_test_split.py`
+
+and train:
+
+`python3 train.py`
