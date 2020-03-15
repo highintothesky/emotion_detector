@@ -25,8 +25,8 @@ def main(**kwargs):
     test_df_path = os.path.join(test_path, 'data.csv')
 
     df = pd.read_csv(csv_path, index_col=0)
-    df_train = pd.DataFrame(columns=['path', 'emotion'])
-    df_test = pd.DataFrame(columns=['path', 'emotion'])
+    df_train = pd.DataFrame(columns=['path', 'name', 'emotion'])
+    df_test = pd.DataFrame(columns=['path', 'name', 'emotion'])
 
     # remove the old files
     for path in [train_img_path, test_img_path]:
@@ -41,13 +41,13 @@ def main(**kwargs):
         if random.random() < kwargs['train_ratio']:
             dst = os.path.join(train_img_path, name)
             df_train = df_train.append(
-                {'path': dst, 'emotion': row['emotion']},
+                {'path': dst, 'name': name, 'emotion': row['emotion']},
                 ignore_index=True
             )
         else:
             dst = os.path.join(test_img_path, name)
             df_test = df_test.append(
-                {'path': dst, 'emotion': row['emotion']},
+                {'path': dst, 'name': name, 'emotion': row['emotion']},
                 ignore_index=True
             )
         copyfile(src, dst)
