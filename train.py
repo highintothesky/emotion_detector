@@ -99,7 +99,7 @@ def main(**kwargs):
             directory=train_img_path,
             x_col='name',
             y_col='emotion',
-            target_size=(480, 360),
+            target_size=(360, 480),
             batch_size=kwargs['batch_size'],
             class_mode='categorical')
 
@@ -108,9 +108,12 @@ def main(**kwargs):
             directory=test_img_path,
             x_col='name',
             y_col='emotion',
-            target_size=(480, 360),
+            target_size=(360, 480),
             batch_size=kwargs['batch_size'],
             class_mode='categorical')
+
+    print('class indices:')
+    print(validation_generator.class_indices)
 
     monitor = 'val_accuracy'
     check_callback = ModelCheckpoint(model_path,

@@ -1,9 +1,20 @@
 """Webcam emotion recognition network test. Also doubles as data recorder."""
-# import tensorflow as tf
 import os
 import cv2
 import click
 import pandas as pd
+import numpy as np
+from tensorflow.keras.models import load_model
+from train import recall_m, precision_m, f1_m
+
+
+def preprocess_image(image):
+    """Scale, reshape etc."""
+    image = cv2.resize(image, (360, 480))
+    image = image / 255.
+    image = np.expand_dims(image, axis=0)
+    print(image.shape)
+    return image
 
 
 def overlay_text(img, emotion, state, recording, bottomLeftCornerOfText,
@@ -29,6 +40,9 @@ def overlay_text(img, emotion, state, recording, bottomLeftCornerOfText,
 @click.option('--data_path',
               default='data',
               help='Path to your data folder.')
+@click.option('--model',
+              default='models/best_model.h5',
+              help='Path to your data folder.')
 def main(**kwargs):
     """Load model, start webcam, run loop."""
     video_capture = cv2.VideoCapture(0)
@@ -49,6 +63,18 @@ def main(**kwargs):
     fontScale = 0.7
     fontColor = (0, 255, 0)  # BGR because of opencv
     lineType = 2
+    # load the model with custom functions
+    class_indices = {'angry': 0,
+                     'confused': 1,
+                     'crosseyed': 2,
+                     'happy': 3,
+                     'neutral': 4,
+                     'sad': 5}
+    custom_objects = {'f1_m': f1_m,
+                      'precision_m': precision_m,
+                      'recall_m': recall_m}
+    model = load_model(kwargs['model'],
+                       custom_objects=custom_objects)
 
     # load previous data so we can add to it
     csv_path = os.path.join(kwargs['data_path'], 'all.csv')
@@ -74,6 +100,11 @@ def main(**kwargs):
                 {'path': img_path, 'emotion': emotions[current_emotion]},
                 ignore_index=True
             )
+
+        if state == 'testing':
+            img = preprocess_image(frame)
+            res = model.predict(img)
+            print(res)
 
         im2show = frame.copy()
         # display current emotion selected
