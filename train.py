@@ -81,7 +81,7 @@ def main(**kwargs):
     model = build_model()
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
-                  metrics=['acc', f1_m, precision_m, recall_m])
+                  metrics=['accuracy', f1_m, precision_m, recall_m])
     print(model.summary())
     print(train_df)
     print(valid_df)
@@ -123,7 +123,8 @@ def main(**kwargs):
     model.fit_generator(
             train_generator,
             epochs=50,
-            validation_data=validation_generator)
+            validation_data=validation_generator,
+            callbacks=[check_callback, check_early])
 
 
 
