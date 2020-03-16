@@ -10,6 +10,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, GlobalMaxPooling2D
 from tensorflow.keras.layers import Dropout, Dense
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.callbacks import TensorBoard
 
 
 def recall_m(y_true, y_pred):
@@ -34,12 +35,14 @@ def build_model():
     """Build a simple CNN."""
     input_layer = Input(shape=(None, None, 3))
     x = Conv2D(32, (3, 3), activation='selu')(input_layer)
+    # x = BatchNormalization()(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
 
     x = Conv2D(32, (3, 3), activation='selu')(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
 
     x = Conv2D(64, (4, 4), activation='selu')(x)
+    # x = BatchNormalization()(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
     x = Dropout(0.5)(x)
 
@@ -95,39 +98,46 @@ def main(**kwargs):
     test_datagen = ImageDataGenerator(rescale=1./255)
 
     train_generator = train_datagen.flow_from_dataframe(
-            dataframe=train_df,
-            directory=train_img_path,
-            x_col='name',
-            y_col='emotion',
-            target_size=(360, 480),
-            batch_size=kwargs['batch_size'],
-            class_mode='categorical')
+        dataframe=train_df,
+        directory=train_img_path,
+        x_col='name',
+        y_col='emotion',
+        target_size=(360, 480),
+        batch_size=kwargs['batch_size'],
+        class_mode='categorical')
 
     validation_generator = test_datagen.flow_from_dataframe(
-            dataframe=valid_df,
-            directory=test_img_path,
-            x_col='name',
-            y_col='emotion',
-            target_size=(360, 480),
-            batch_size=kwargs['batch_size'],
-            class_mode='categorical')
+        dataframe=valid_df,
+        directory=test_img_path,
+        x_col='name',
+        y_col='emotion',
+        target_size=(360, 480),
+        batch_size=kwargs['batch_size'],
+        class_mode='categorical')
 
     print('class indices:')
     print(validation_generator.class_indices)
 
     monitor = 'val_accuracy'
-    check_callback = ModelCheckpoint(model_path,
-                                     monitor=monitor,
-                                     save_best_only=True)
-    check_early = EarlyStopping(monitor=monitor,
-                                patience=15,
-                                verbose=1)
+    check_callback = ModelCheckpoint(
+        model_path,
+        monitor=monitor,
+        save_best_only=True)
+
+    check_early = EarlyStopping(
+        monitor=monitor,
+        patience=15,
+        verbose=1)
+
+    check_tb = TensorBoard(
+        log_dir='logs'
+    )
 
     model.fit_generator(
-            train_generator,
-            epochs=50,
-            validation_data=validation_generator,
-            callbacks=[check_callback, check_early])
+        train_generator,
+        epochs=80,
+        validation_data=validation_generator,
+        callbacks=[check_callback, check_early, check_tb])
 
 
 

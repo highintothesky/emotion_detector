@@ -11,9 +11,9 @@ from train import recall_m, precision_m, f1_m
 def preprocess_image(image):
     """Scale, reshape etc."""
     image = cv2.resize(image, (360, 480))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = image / 255.
     image = np.expand_dims(image, axis=0)
-    print(image.shape)
     return image
 
 
@@ -64,12 +64,12 @@ def main(**kwargs):
     fontColor = (0, 255, 0)  # BGR because of opencv
     lineType = 2
     # load the model with custom functions
-    class_indices = {'angry': 0,
-                     'confused': 1,
-                     'crosseyed': 2,
-                     'happy': 3,
-                     'neutral': 4,
-                     'sad': 5}
+    class_indices = {0: 'angry',
+                     1: 'confused',
+                     2: 'crosseyed',
+                     3: 'happy',
+                     4: 'neutral',
+                     5: 'sad'}
     custom_objects = {'f1_m': f1_m,
                       'precision_m': precision_m,
                       'recall_m': recall_m}
@@ -101,14 +101,17 @@ def main(**kwargs):
                 ignore_index=True
             )
 
+        emotion = emotions[current_emotion]
         if state == 'testing':
+            # get the network output
             img = preprocess_image(frame)
             res = model.predict(img)
-            print(res)
+            res_idx = np.argmax(res)
+            emotion = class_indices[res_idx]
 
         im2show = frame.copy()
         # display current emotion selected
-        im2show = overlay_text(im2show, emotions[current_emotion], state,
+        im2show = overlay_text(im2show, emotion, state,
                                recording, bottomLeftCornerOfText, font,
                                fontScale, fontColor, lineType)
         cv2.imshow('Video', im2show)
