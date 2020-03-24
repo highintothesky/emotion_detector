@@ -3,47 +3,10 @@ import os
 import cv2
 import click
 import pandas as pd
-import numpy as np
+# import numpy as np
 from tensorflow.keras.models import load_model
 from train import recall_m, precision_m, f1_m
-
-
-def preprocess_image(image):
-    """Scale, reshape etc."""
-    image = cv2.resize(image, (360, 480))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = image / 255.
-    image = np.expand_dims(image, axis=0)
-    return image
-
-
-def overlay_text(img, emotion, state, recording, bottomLeftCornerOfText,
-                 font, fontScale, fontColor, lineType, row_dy):
-    """Overlay status text on image."""
-    if state == 'recording' and recording:
-        img = cv2.circle(img, (30, 30), 10, (0, 0, 255), -1)
-    elif state == 'recording' and not recording:
-        img = cv2.circle(img, (30, 30), 10, (255, 255, 0), -1)
-
-    x = bottomLeftCornerOfText[0]
-    y = bottomLeftCornerOfText[1]
-    rows = emotion.split('\n')
-    y_pos = [y - i*row_dy for i in range(len(rows))]
-    y_pos.reverse()
-
-    for i, line in enumerate(rows):
-        y = y_pos[i]
-        textpos = (x, y)
-        cv2.putText(
-            img,
-            line,
-            textpos,
-            font,
-            fontScale,
-            fontColor,
-            lineType
-        )
-    return img
+from utils import preprocess_image, overlay_text, get_top_classes
 
 
 @click.command()
@@ -53,6 +16,9 @@ def overlay_text(img, emotion, state, recording, bottomLeftCornerOfText,
 @click.option('--model',
               default='models/best_model.h5',
               help='Path to your data folder.')
+@click.option('--n_top',
+              default=3,
+              help='How many of the resulting emotions to show.')
 def main(**kwargs):
     """Load model, start webcam, run loop."""
     video_capture = cv2.VideoCapture(0)
@@ -117,14 +83,11 @@ def main(**kwargs):
             # get the network output
             img = preprocess_image(frame)
             res = model.predict(img)
-
-            idx = (-res[0, :]).argsort()[:2]
-            score1 = res[0, idx[0]]
-            emo1 = str(round(score1*100, 2)) + '% ' + class_indices[idx[0]]
-            score2 = res[0, idx[1]]
-            emo2 = str(round(score2*100, 2)) + '% ' + class_indices[idx[1]]
-
-            emotion = f'{emo1}\n{emo2}'
+            top_res = get_top_classes(res, n=kwargs['n_top'])
+            emotion = ''
+            for sc_dict in top_res:
+                emotion += str(round(sc_dict['score']*100, 2)) + '% '
+                emotion += sc_dict['emotion'] + '\n'
 
         im2show = frame.copy()
         # display current emotion selected
