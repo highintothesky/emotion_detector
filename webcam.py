@@ -18,21 +18,31 @@ def preprocess_image(image):
 
 
 def overlay_text(img, emotion, state, recording, bottomLeftCornerOfText,
-                 font, fontScale, fontColor, lineType):
+                 font, fontScale, fontColor, lineType, row_dy):
     """Overlay status text on image."""
     if state == 'recording' and recording:
         img = cv2.circle(img, (30, 30), 10, (0, 0, 255), -1)
     elif state == 'recording' and not recording:
         img = cv2.circle(img, (30, 30), 10, (255, 255, 0), -1)
-    cv2.putText(
-        img,
-        emotion,
-        bottomLeftCornerOfText,
-        font,
-        fontScale,
-        fontColor,
-        lineType
-    )
+
+    x = bottomLeftCornerOfText[0]
+    y = bottomLeftCornerOfText[1]
+    rows = emotion.split('\n')
+    y_pos = [y - i*row_dy for i in range(len(rows))]
+    y_pos.reverse()
+
+    for i, line in enumerate(rows):
+        y = y_pos[i]
+        textpos = (x, y)
+        cv2.putText(
+            img,
+            line,
+            textpos,
+            font,
+            fontScale,
+            fontColor,
+            lineType
+        )
     return img
 
 
@@ -59,10 +69,11 @@ def main(**kwargs):
     recording = False
     # some settings for printing on screen
     font = cv2.FONT_HERSHEY_SIMPLEX
-    bottomLeftCornerOfText = (500, 450)
+    bottomLeftCornerOfText = (400, 450)
     fontScale = 0.7
     fontColor = (0, 255, 0)  # BGR because of opencv
     lineType = 2
+    row_dy = 20
     # load the model with custom functions
     class_indices = {0: 'angry',
                      1: 'confused',
@@ -106,14 +117,20 @@ def main(**kwargs):
             # get the network output
             img = preprocess_image(frame)
             res = model.predict(img)
-            res_idx = np.argmax(res)
-            emotion = class_indices[res_idx]
+
+            idx = (-res[0, :]).argsort()[:2]
+            score1 = res[0, idx[0]]
+            emo1 = str(round(score1*100, 2)) + '% ' + class_indices[idx[0]]
+            score2 = res[0, idx[1]]
+            emo2 = str(round(score2*100, 2)) + '% ' + class_indices[idx[1]]
+
+            emotion = f'{emo1}\n{emo2}'
 
         im2show = frame.copy()
         # display current emotion selected
         im2show = overlay_text(im2show, emotion, state,
                                recording, bottomLeftCornerOfText, font,
-                               fontScale, fontColor, lineType)
+                               fontScale, fontColor, lineType, row_dy)
         cv2.imshow('Video', im2show)
 
         # control handling
@@ -138,8 +155,7 @@ def main(**kwargs):
             if key & 0xFF == ord(str(idx)):
                 print('Setting emotion recording to', emotions[idx])
                 current_emotion = idx
-        # elif key & 0xFF == ord('1'):
-        #     print(1111)
+
     # When everything is done, release the capture
     video_capture.release()
     cv2.destroyAllWindows()
