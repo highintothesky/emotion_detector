@@ -106,6 +106,7 @@ class ControlWindow:
                     print(self.top_classes[0])
                     self.client.send_message('emotion',
                                              self.top_classes[0]['emotion'])
+                    self.new_result = False
         except RuntimeError as ex:
             print("[INFO] caught a RuntimeError while trying to send OSC")
 
