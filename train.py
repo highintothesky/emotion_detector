@@ -11,6 +11,7 @@ from tensorflow.keras.layers import Dropout, Dense
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras.models import load_model
 
 
 def recall_m(y_true, y_pred):
@@ -70,6 +71,9 @@ def build_model():
 @click.option('--batch_size',
               default=16,
               help='Training batch size.')
+@click.option('--load_model',
+              default='',
+              help='Load pretrained weights.')
 def main(**kwargs):
     """make a new model, train it."""
     train_csv = os.path.join(kwargs['data_path'], 'train', 'data.csv')
@@ -81,10 +85,17 @@ def main(**kwargs):
     train_df = pd.read_csv(train_csv, index_col=0)
     valid_df = pd.read_csv(test_csv, index_col=0)
 
-    model = build_model()
-    model.compile(optimizer='adam',
-                  loss='categorical_crossentropy',
-                  metrics=['accuracy', f1_m, precision_m, recall_m])
+    if kwargs['load_model'] != '':
+        custom_objects = {'f1_m': f1_m,
+                          'precision_m': precision_m,
+                          'recall_m': recall_m}
+        model = load_model(kwargs['load_model'],
+                           custom_objects=custom_objects)
+    else:
+        model = build_model()
+        model.compile(optimizer='adam',
+                      loss='categorical_crossentropy',
+                      metrics=['accuracy', f1_m, precision_m, recall_m])
     print(model.summary())
     print(train_df)
     print(valid_df)
