@@ -93,7 +93,9 @@ def main(**kwargs):
             rescale=1./255,
             shear_range=0.2,
             zoom_range=0.2,
-            horizontal_flip=True)
+            rotation_range=30,
+            horizontal_flip=True,
+            fill_mode='nearest')
 
     test_datagen = ImageDataGenerator(rescale=1./255)
 
@@ -130,7 +132,11 @@ def main(**kwargs):
         verbose=1)
 
     check_tb = TensorBoard(
-        log_dir='logs'
+        log_dir='logs',
+        write_images=True,
+        histogram_freq=2,
+        write_graph=True,
+        embeddings_freq=2
     )
 
     model.fit_generator(

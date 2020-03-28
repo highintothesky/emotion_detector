@@ -15,7 +15,7 @@ from utils import preprocess_image, overlay_text, get_top_classes
               help='Path to your data folder.')
 @click.option('--model',
               default='models/best_model.h5',
-              help='Path to your data folder.')
+              help='Path to your model file.')
 @click.option('--n_top',
               default=3,
               help='How many of the resulting emotions to show.')
